@@ -2,7 +2,7 @@ import type { IOptions } from "./options.interface";
 import type { IHandler } from "./handler.interface";
 
 interface ISession {
-  _handler: IHandler;
+  _handlers: IHandler[];
 
   _options: IOptions;
 

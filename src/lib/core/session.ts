@@ -7,7 +7,7 @@ import type { IHandler } from "./interfaces/handler.interface";
 import type { IOptions } from "./interfaces/options.interface";
 
 class Session implements ISession {
-  _handler: IHandler = DefaultHandler;
+  _handlers: IHandler[] = [DefaultHandler];
   _options: IOptions = DefaultOptions;
   _initialized: boolean;
 
@@ -24,13 +24,13 @@ class Session implements ISession {
   use(handler: IHandler): void {
     this._initialized
       ? throwError("Handler must be used before init")
-      : (this._handler = handler);
+      : this._handlers.push(handler);
   }
 
   init() {
     this.venom
       .create(this._options.session)
-      .then((client: Whatsapp) => this._handler(client))
+      .then((client: Whatsapp) => this._handlers.map((fn) => fn(client)))
       .catch((error: Error) => console.log(error));
 
     this._initialized = true;
