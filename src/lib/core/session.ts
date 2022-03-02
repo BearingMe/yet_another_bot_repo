@@ -1,49 +1,35 @@
-import type { Whatsapp } from "venom-bot";
-import type { IHandler, IOptions } from "./session.protocols";
+import { throwError } from "../utils/errors";
+import { DefaultHandler, DefaultOptions } from "./default";
 
-class Session {
-  _venom: any;
-  _handler: IHandler | undefined;
-  _options: IOptions;
+import type { Whatsapp } from "venom-bot";
+import type { ISession } from "./interfaces/session.interface";
+import type { IHandler } from "./interfaces/handler.interface";
+import type { IOptions } from "./interfaces/options.interface";
+
+class Session implements ISession {
+  _handler: IHandler = DefaultHandler;
+  _options: IOptions = DefaultOptions;
   _initialized: boolean;
 
-  constructor(_venom: any) {
-    this._venom = _venom;
-    this._options = { session: "coding" };
+  constructor(private venom: any) {
     this._initialized = false;
   }
 
-  initializedError(msg: string) {
-    if (this._initialized) {
-      throw new Error(msg);
-    }
-  }
-
-  handlerError(msg: string) {
-    if (!this._handler) {
-      throw new Error(msg);
-    }
-
-    if (typeof this._handler !== "function") {
-      throw new Error("Handler must be a function");
-    }
-  }
-
   set(key: "session", value: string) {
-    this.initializedError("Set must be called before init");
-    this._options[key] = value;
+    this._initialized
+      ? throwError("Options must be set before init")
+      : (this._options[key] = value);
   }
 
-  use(handler: IHandler) {
-    this.initializedError("Use must be called before init");
-    this._handler = handler;
+  use(handler: IHandler): void {
+    this._initialized
+      ? throwError("Handler must be used before init")
+      : (this._handler = handler);
   }
 
   init() {
-    this.handlerError("Handler must be set before init");
-
-    this._venom
-      .create(this._options.session) // @ts-ignore
+    this.venom
+      .create(this._options.session)
       .then((client: Whatsapp) => this._handler(client))
       .catch((error: Error) => console.log(error));
 
